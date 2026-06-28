@@ -696,12 +696,20 @@ document.getElementById('saveCustom').addEventListener('click', () => {
 });
 
 function openApp(pkg, name) {
-  if (env.isAndroid) {
-    window.location.href = `intent:#Intent;action=android.intent.action.MAIN;package=${pkg};end`;
-  } else {
-    window.open(`https://play.google.com/store/apps/details?id=${pkg}`, '_blank');
-  }
-  toast('🔗', `Abriendo ${name}…`, 'info');
+       if (env.isAndroid) {
+         try {
+           const el = document.createElement('a');
+           el.href = `intent:#Intent;action=android.intent.action.MAIN;
+     category=android.intent.category.LAUNCHER;package=${pkg};end`;
+           el.click();
+         } catch (e) {
+           toast('⚠', `${name} no instalado`, 'warn');
+         }
+       } else {
+         window.open(`https://play.google.com/store/apps/details?id=${pkg}`,
+     '_blank');
+       }
+       toast('🔗', `Abriendo ${name}…`, 'info');
 }
 
 /* ===============================================================

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="description" content="Game Space — Centro de control gaming para Android con Shizuku, Termux y Brevent. Optimiza el rendimiento sin root." />
+  <meta name="author" content="Aliienkingmx" />
+  <meta name="application-name" content="Game Space" />
+  <meta name="apple-mobile-web-app-title" content="Game Space" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-TileColor" content="#0a0e1a" />
+  <meta name="msapplication-navbutton-color" content="#0a0e1a" />
+  <meta property="og:title" content="Game Space · Booster gaming Android" />
+  <meta property="og:description" content="Optimiza tus juegos con Shizuku, Termux y Brevent. Sin root." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='106' fill='%230a0e1a'/><rect x='64' y='64' width='384' height='384' rx='86' fill='%2300e5ff'/><text x='256' y='340' font-size='180' font-weight='800' text-anchor='middle' fill='%230a0e1a' font-family='sans-serif'>GS</text></svg>" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='38' fill='%230a0e1a'/><rect x='22' y='22' width='136' height='136' rx='30' fill='%2300e5ff'/><text x='90' y='118' font-size='78' font-weight='800' text-anchor='middle' fill='%230a0e1a' font-family='sans-serif'>GS</text></svg>" />
+  <title>Game Space · Booster gaming Android</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2300e5ff'/><stop offset='1' stop-color='%23b388ff'/></linearGradient></defs><rect rx='14' width='64' height='64' fill='url(%23g)'/><text x='32' y='44' font-size='34' font-weight='800' text-anchor='middle' fill='%230a0e1a' font-family='sans-serif'>G</text></svg>" />
+</head>
+<body>
+  <div class="app">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo">GS</div>
+        <div class="brand-text">
+          <h1>Game Space</h1>
+          <p>v1.0 · Pro</p>
+        </div>
+        <button class="close-sidebar" id="closeSidebar" aria-label="Cerrar menú">✕</button>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">▦</span>
+          <span>Panel</span>
+        </button>
+        <button class="nav-item" data-view="games">
+          <span class="nav-icon">▶</span>
+          <span>Mis Juegos</span>
+        </button>
+        <button class="nav-item" data-view="booster">
+          <span class="nav-icon">⚡</span>
+          <span>Booster</span>
+        </button>
+        <button class="nav-item" data-view="profiles">
+          <span class="nav-icon">⚙</span>
+          <span>Perfiles</span>
+        </button>
+        <button class="nav-item" data-view="terminal">
+          <span class="nav-icon">&gt;_</span>
+          <span>Terminal</span>
+        </button>
+        <button class="nav-item" data-view="bridge">
+          <span class="nav-icon">⌬</span>
+          <span>Bridges</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="nav-icon">⚒</span>
+          <span>Ajustes</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="bridge-status" id="bridgeIndicator">
+          <span class="dot dot-off" id="dot"></span>
+          <span id="bridgeText">Sin conexión</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- ============ MAIN ============ -->
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="hamburger" aria-label="Abrir menú">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title">
+          <h2 id="pageTitle">Panel</h2>
+          <span id="pageSub">Resumen del sistema</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="refreshBtn" title="Actualizar">↻</button>
+          <button class="icon-btn" id="connectBtn" title="Conectar">⌬</button>
+        </div>
+      </header>
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card" style="--c:#00e5ff">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-info">
+              <span class="stat-label">CPU</span>
+              <span class="stat-value" id="cpuVal">--%</span>
+              <div class="bar"><div class="bar-fill" id="cpuBar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stat-card" style="--c:#b388ff">
+            <div class="stat-icon">▤</div>
+            <div class="stat-info">
+              <span class="stat-label">RAM</span>
+              <span class="stat-value" id="ramVal">--%</span>
+              <div class="bar"><div class="bar-fill" id="ramBar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stat-card" style="--c:#69f0ae">
+            <div class="stat-icon">●</div>
+            <div class="stat-info">
+              <span class="stat-label">GPU</span>
+              <span class="stat-value" id="gpuVal">OK</span>
+              <div class="bar"><div class="bar-fill" id="gpuBar" style="width:60%"></div></div>
+            </div>
+          </div>
+          <div class="stat-card" style="--c:#ffd54f">
+            <div class="stat-icon">☼</div>
+            <div class="stat-info">
+              <span class="stat-label">Batería</span>
+              <span class="stat-value" id="batVal">--%</span>
+              <div class="bar"><div class="bar-fill" id="batBar" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <h3>Acciones rápidas</h3>
+          <div class="actions-grid">
+            <button class="action-card" data-act="boost">
+              <div class="action-icon">🚀</div>
+              <div class="action-name">Boost</div>
+              <div class="action-desc">RAM + CPU</div>
+            </button>
+            <button class="action-card" data-act="fps">
+              <div class="action-icon">◈</div>
+              <div class="action-name">FPS+</div>
+              <div class="action-desc">90/120 Hz</div>
+            </button>
+            <button class="action-card" data-act="cool">
+              <div class="action-icon">❅</div>
+              <div class="action-name">Enfriar</div>
+              <div class="action-desc">Throttling off</div>
+            </button>
+            <button class="action-card" data-act="clean">
+              <div class="action-icon">♻</div>
+              <div class="action-name">Limpiar</div>
+              <div class="action-desc">Cache + RAM</div>
+            </button>
+            <button class="action-card" data-act="freeze">
+              <div class="action-icon">❄</div>
+              <div class="action-name">Congelar</div>
+              <div class="action-desc">Apps en 2do plano</div>
+            </button>
+            <button class="action-card" data-act="thermal">
+              <div class="action-icon">↯</div>
+              <div class="action-name">Thermal</div>
+              <div class="action-desc">Modo Performance</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="dashboard-row">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Procesos activos</h3>
+              <button class="link-btn" data-act="refresh-procs">↻</button>
+            </div>
+            <ul class="process-list" id="processList">
+              <li class="process-item"><span>Escaneando…</span></li>
+            </ul>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Registro</h3>
+              <button class="link-btn" id="clearLog">Limpiar</button>
+            </div>
+            <ul class="log-list" id="logList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ GAMES ============ -->
+      <section class="view" id="view-games">
+        <div class="toolbar">
+          <input type="search" id="searchGames" placeholder="Buscar juego instalado…" />
+          <button class="primary-btn" id="scanGames">Escanear</button>
+        </div>
+        <div class="games-grid" id="gamesGrid">
+          <div class="empty-state">
+            <div class="empty-icon">🎮</div>
+            <div>Pulsa <b>Escanear</b> para detectar tus juegos</div>
+            <small>Requiere Shizuku o Brevent activo</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BOOSTER ============ -->
+      <section class="view" id="view-booster">
+        <div class="booster-hero">
+          <div class="hero-content">
+            <h2>Boost Gaming</h2>
+            <p>Optimización completa en un toque. Libera RAM, activa rendimiento, prioriza GPU y refresco máximo.</p>
+            <button class="big-btn" id="boostAll">
+              <span class="big-btn-icon">⚡</span>
+              <span class="big-btn-text">
+                <span class="big-btn-title">Ejecutar Boost Total</span>
+                <span class="big-btn-sub">CPU + GPU + RAM + FPS</span>
+              </span>
+            </button>
+          </div>
+          <div class="hero-visual">
+            <div class="ring"></div>
+            <div class="ring r2"></div>
+            <div class="ring r3"></div>
+          </div>
+        </div>
+
+        <div class="boost-grid">
+          <div class="boost-card">
+            <div class="boost-head"><h3>Liberar RAM</h3><span class="dot dot-on"></span></div>
+            <p>Vacía caches del sistema y mata procesos no esenciales (no afecta tus juegos).</p>
+            <pre class="cmd-preview">shizuku exec "am send-trim-memory PRUNE_LEVEL_RUNNING_MODERATE"</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>Forzar Performance</h3><span class="dot dot-on"></span></div>
+            <p>Sobrescribe <code>power.save</code> y activa el governor de máximo rendimiento.</p>
+            <pre class="cmd-preview">su -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>Refresh Rate Max</h3><span class="dot dot-on"></span></div>
+            <p>Establece la tasa de refresco al máximo soportado por el panel.</p>
+            <pre class="cmd-preview">shizuku exec "settings put system user_rotation 0 && settings put global peak_refresh_rate 144"</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>Desactivar Animaciones</h3><span class="dot dot-warn"></span></div>
+            <p>Reduce latencia visual poniendo las animaciones a 0.5x.</p>
+            <pre class="cmd-preview">shizuku exec "settings put global window_animation_scale 0.5; settings put global transition_animation_scale 0.5; settings put global animator_duration_scale 0.5"</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>Congelar Apps</h3><span class="dot dot-on"></span></div>
+            <p>Pausa apps en 2º plano usando Brevent para reducir uso de CPU.</p>
+            <pre class="cmd-preview">brevent list -freeze com.example.app</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>DNS Privado</h3><span class="dot dot-on"></span></div>
+            <p>Reduce latencia en juegos online con DNS optimizado.</p>
+            <pre class="cmd-preview">shizuku exec "settings put global private_dns_mode hostname; settings put global private_dns_specifier dns.google"</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>Touch Boost</h3><span class="dot dot-on"></span></div>
+            <p>Aumenta la sensibilidad táctil y velocidad de respuesta.</p>
+            <pre class="cmd-preview">shizuku exec "settings put secure touch_event_threshold 4; settings put system pointer_speed 7"</pre>
+          </div>
+          <div class="boost-card">
+            <div class="boost-head"><h3>Thermal Performance</h3><span class="dot dot-warn"></span></div>
+            <p>Sobrescribe límites térmicos con thermal HAL cuando está disponible.</p>
+            <pre class="cmd-preview">shizuku exec "cmd thermalservice override-status 0"</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PROFILES ============ -->
+      <section class="view" id="view-profiles">
+        <div class="profiles-grid" id="profilesGrid"></div>
+      </section>
+
+      <!-- ============ TERMINAL ============ -->
+      <section class="view" id="view-terminal">
+        <div class="terminal">
+          <div class="terminal-head">
+            <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+            <span class="terminal-title">shizuku · termux · brevent</span>
+          </div>
+          <div class="terminal-body" id="termBody">
+            <span class="t-info">Game Space Terminal · conectado vía Shizuku/Termux</span><br>
+            <span class="t-prompt">$</span> <span class="t-out">Escribe <b>help</b> para ver comandos. Usa el constructor para enviar instrucciones a los bridges.</span>
+          </div>
+          <div class="terminal-actions">
+            <div class="cmd-suggestions">
+              <button class="cmd-chip" data-cmd="help">help</button>
+              <button class="cmd-chip" data-cmd="shizuku info">shizuku info</button>
+              <button class="cmd-chip" data-cmd="pm list packages -3">pm list packages -3</button>
+              <button class="cmd-chip" data-cmd="dumpsys cpuinfo">dumpsys cpuinfo</button>
+              <button class="cmd-chip" data-cmd="dumpsys meminfo">dumpsys meminfo</button>
+              <button class="cmd-chip" data-cmd="dumpsys gfxinfo">dumpsys gfxinfo</button>
+              <button class="cmd-chip" data-cmd="cmd thermalservice">cmd thermalservice</button>
+              <button class="cmd-chip" data-cmd="settings list system">settings list system</button>
+              <button class="cmd-chip" data-cmd="brevent list">brevent list</button>
+              <button class="cmd-chip" data-cmd="clear">clear</button>
+            </div>
+          </div>
+          <div class="terminal-input">
+            <span class="prompt">gspace $</span>
+            <input type="text" id="termInput" placeholder="ej: shizuku exec dumpsys cpuinfo" autocomplete="off" autocapitalize="off" autocorrect="off" />
+            <button class="primary-btn" id="termSend">⏎</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BRIDGE ============ -->
+      <section class="view" id="view-bridge">
+        <div class="bridge-grid">
+          <div class="bridge-card">
+            <div class="bridge-head">
+              <div class="bridge-logo shizuku">S</div>
+              <div>
+                <h3>Shizuku</h3>
+                <p>API privilegiada para apps sin root</p>
+              </div>
+            </div>
+            <div class="bridge-status-detail" id="shizukuStatus">
+              <b>Estado:</b> <span class="dot dot-off" style="display:inline-block"></span> Verificando…
+            </div>
+            <div class="bridge-actions">
+              <button class="primary-btn" id="shizukuOpen">Abrir Shizuku</button>
+              <button class="ghost-btn" id="shizukuCheck">Verificar</button>
+              <button class="ghost-btn" id="shizukuPaste">Pegar comando</button>
+            </div>
+            <pre class="cmd-preview" id="shizukuPreview">shizuku exec "pm list packages -3 | grep -i game"</pre>
+          </div>
+
+          <div class="bridge-card">
+            <div class="bridge-head">
+              <div class="bridge-logo termux">T</div>
+              <div>
+                <h3>Termux</h3>
+                <p>Shell avanzada · comandos Linux</p>
+              </div>
+            </div>
+            <div class="bridge-status-detail" id="termuxStatus">
+              <b>Estado:</b> <span class="dot dot-off" style="display:inline-block"></span> Verificando…
+            </div>
+            <div class="bridge-actions">
+              <button class="primary-btn" id="termuxRun">Ejecutar comando</button>
+              <button class="ghost-btn" id="termuxIntent">Abrir Termux</button>
+              <button class="ghost-btn" id="termuxPaste">Pegar comando</button>
+            </div>
+            <textarea id="termuxCmd" placeholder="Comando Termux…">dumpsys meminfo | head -40</textarea>
+          </div>
+
+          <div class="bridge-card">
+            <div class="bridge-head">
+              <div class="bridge-logo brevent">B</div>
+              <div>
+                <h3>Brevent</h3>
+                <p>Congelar apps en 2º plano · 0 root</p>
+              </div>
+            </div>
+            <div class="bridge-status-detail" id="breventStatus">
+              <b>Estado:</b> <span class="dot dot-off" style="display:inline-block"></span> Verificando…
+            </div>
+            <div class="bridge-actions">
+              <button class="primary-btn" id="breventList">Listar apps</button>
+              <button class="ghost-btn" id="breventOpen">Abrir Brevent</button>
+              <button class="ghost-btn" id="breventPaste">Pegar comando</button>
+            </div>
+            <textarea id="breventCmd" placeholder="Comando Brevent…">brevent list -standby</textarea>
+          </div>
+
+          <div class="bridge-card wide">
+            <div class="bridge-head">
+              <div class="bridge-logo adb">⌬</div>
+              <div>
+                <h3>Ejecutar comando personalizado</h3>
+                <p>Envía cualquier instrucción a través de Shizuku → Termux</p>
+              </div>
+            </div>
+            <textarea id="customCmd" placeholder="comando libre… ej: shizuku exec 'dumpsys cpuinfo | grep TOTAL'" style="min-height:100px"></textarea>
+            <div class="bridge-actions">
+              <button class="primary-btn" id="execCustom">Ejecutar</button>
+              <button class="ghost-btn" id="copyOut">Copiar salida</button>
+              <button class="ghost-btn" id="saveCustom">Guardar preset</button>
+            </div>
+            <pre class="cmd-preview" id="customOut" style="max-height:160px">// La salida del comando aparecerá aquí…</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="settings-list">
+          <div class="setting-row">
+            <div>
+              <h4>Modo oscuro</h4>
+              <p>Tema gaming nativo de Game Space</p>
+            </div>
+            <label class="switch"><input type="checkbox" checked disabled /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Auto-boost al iniciar juego</h4>
+              <p>Ejecuta el optimizador al abrir una app de juego</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="autoBoost" /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Detección automática de juegos</h4>
+              <p>Escanea paquetes instalados cada 30 min</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="autoScan" checked /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Mantener refresco máximo</h4>
+              <p>Aplica 90/120 Hz permanentemente al iniciar</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="keepFps" /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Congelar apps sociales</h4>
+              <p>Pausa Instagram, TikTok, etc. en segundo plano</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="freezeSocial" /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Notificaciones de boost</h4>
+              <p>Toast en pantalla cuando se aplica una optimización</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="boostNotif" checked /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Recordar terminal</h4>
+              <p>Conserva el historial al cerrar la app</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="saveHist" checked /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div>
+              <h4>Modo depuración</h4>
+              <p>Logs verbosos en consola (DevTools)</p>
+            </div>
+            <label class="switch"><input type="checkbox" id="debugMode" /><span class="slider"></span></label>
+          </div>
+          <div class="setting-row danger">
+            <div>
+              <h4>Restablecer configuración</h4>
+              <p>Devuelve la app a sus valores por defecto</p>
+            </div>
+            <button class="danger-btn" id="resetAll">Reset</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <button class="fab" id="fab" aria-label="Boost rápido">⚡</button>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

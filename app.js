@@ -66,7 +66,7 @@ function debug(...args) {
 const env = {
   isAndroid: /Android/i.test(navigator.userAgent),
   isTermux: typeof window.TermuxTTY !== 'undefined' || /Termux/i.test(navigator.userAgent),
-  hasShizuku: 'ShizukuManager' in window || typeof window.shizukuinfo !== 'undefined',
+  hasShizuku: 'Shizukuinfo' in window || typeof window.shizukuinfo !== 'undefined',
   hasBrevent: false,
   hasTermuxAPI: 'termux' in window,
   ua: navigator.userAgent,

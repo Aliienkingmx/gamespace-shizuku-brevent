@@ -1,0 +1,48 @@
+name: Compilar y Publicar APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Permite compilar manualmente con un botón desde tu celular
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clonar código fuente
+      uses: actions/checkout@v4
+
+    - name: Configurar Java JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+
+    - name: Dar permisos de ejecución a Gradle
+      run: chmod +x gradlew
+
+    - name: Compilar APK (Instalable de inmediato)
+      run: ./gradlew assembleDebug
+
+    - name: Crear Release Automático en GitHub
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: "Última Versión Estable (APK)"
+        body: |
+          ### ¡Tu APK está listo! 🚀
+          Este APK ha sido compilado automáticamente en la nube.
+          
+          * **Archivo:** `app-debug.apk`
+          * **Compatibilidad:** Shizuku & Brevent listo.
+          * **Instalación:** No requiere firma manual, viene pre-firmado listo para instalar.
+        draft: false
+        prerelease: false
+        files: app/build/outputs/apk/debug/app-debug.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

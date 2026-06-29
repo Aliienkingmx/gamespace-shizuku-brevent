@@ -1,48 +1,63 @@
-name: Compilar y Publicar APK
+name: Compilar APK y Crear Release
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch: # Permite compilar manualmente con un botón desde tu celular
-
-permissions:
-  contents: write
+    tags:
+      - 'v*' # Se activa automáticamente cuando creas tags de versión como v1.0.0
+  workflow_dispatch: # Te permite iniciar la compilación manualmente desde tu celular
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-    - name: Clonar código fuente
+    - name: Clonar código
       uses: actions/checkout@v4
 
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Instalar dependencias web
+      run: npm ci
+
+    - name: Compilar sitio web de React
+      run: npm run build
+
     - name: Configurar Java JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
-        cache: 'gradle'
 
-    - name: Dar permisos de ejecución a Gradle
-      run: chmod +x gradlew
+    - name: Instalar Capacitor y crear app Android
+      run: |
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+        npx cap init "GameSpace" "com.aliienkingmx.gamespace" --web-dir=dist
+        npx cap add android
 
-    - name: Compilar APK (Instalable de inmediato)
-      run: ./gradlew assembleDebug
+    - name: Sincronizar código React con Android
+      run: npx cap sync
 
-    - name: Crear Release Automático en GitHub
-      uses: softprops/action-gh-release@v2
+    - name: Permisos para Gradlew
+      run: chmod +x android/gradlew
+
+    - name: Compilar APK en modo Release
+      run: |
+        cd android
+        ./gradlew assembleRelease
+
+    - name: Crear Release en GitHub
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: latest
-        name: "Última Versión Estable (APK)"
-        body: |
-          ### ¡Tu APK está listo! 🚀
-          Este APK ha sido compilado automáticamente en la nube.
-          
-          * **Archivo:** `app-debug.apk`
-          * **Compatibilidad:** Shizuku & Brevent listo.
-          * **Instalación:** No requiere firma manual, viene pre-firmado listo para instalar.
+        files: android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: Release ${{ github.ref_name }}
+        tag_name: ${{ github.ref }}
         draft: false
         prerelease: false
-        files: app/build/outputs/apk/debug/app-debug.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,63 @@
+name: Compilar APK y Crear Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Se activa automáticamente cuando creas tags de versión como v1.0.0
+  workflow_dispatch: # Te permite iniciar la compilación manualmente desde tu celular
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Clonar código
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Instalar dependencias web
+      run: npm ci
+
+    - name: Compilar sitio web de React
+      run: npm run build
+
+    - name: Configurar Java JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Instalar Capacitor y crear app Android
+      run: |
+        npm install @capacitor/core @capacitor/cli @capacitor/android
+        npx cap init "GameSpace" "com.aliienkingmx.gamespace" --web-dir=dist
+        npx cap add android
+
+    - name: Sincronizar código React con Android
+      run: npx cap sync
+
+    - name: Permisos para Gradlew
+      run: chmod +x android/gradlew
+
+    - name: Compilar APK en modo Release
+      run: |
+        cd android
+        ./gradlew assembleRelease
+
+    - name: Crear Release en GitHub
+      uses: softprops/action-gh-release@v1
+      with:
+        files: android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: Release ${{ github.ref_name }}
+        tag_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

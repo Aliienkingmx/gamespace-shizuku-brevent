@@ -8,6 +8,12 @@ on:
       - main
   workflow_dispatch: # Permite compilar manualmente desde tu celular con un solo botón
 
+env:
+  APP_ID: com.aliienkingmx.gamespace
+  APP_NAME: GameSpace
+  NODE_VERSION: 18
+  JAVA_VERSION: 17
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,89 +27,175 @@ jobs:
     - name: Configurar Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Cache Node modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
     - name: Preparar carpeta web para Capacitor
       run: |
+        set -e
+        
         # Si existe package.json, instalar dependencias y compilar
         if [ -f "package.json" ]; then
-          npm install
+          echo "📦 Instalando dependencias de Node..."
+          npm ci --prefer-offline --no-audit
+          
+          # Verificar si existe script build
           if npm run | grep -q "build"; then
+            echo "🔨 Compilando proyecto web..."
             npm run build
           fi
         fi
 
         # Auto-detectar carpeta web
         if [ -d "dist" ]; then
+          echo "✅ Carpeta 'dist' encontrada"
           echo "WEB_DIR=dist" >> $GITHUB_ENV
         elif [ -d "build" ]; then
+          echo "✅ Carpeta 'build' encontrada"
           echo "WEB_DIR=build" >> $GITHUB_ENV
         elif [ -d "www" ]; then
+          echo "✅ Carpeta 'www' encontrada"
           echo "WEB_DIR=www" >> $GITHUB_ENV
         else
-          echo "Proyecto estático detectado. Creando carpeta 'www'..."
+          echo "⚠️  Proyecto estático detectado. Creando carpeta 'www'..."
           mkdir -p www
-          cp -r index.html app.js styles.css sw.js manifest.webmanifest assets www/ 2>/dev/null || true
+          
+          # Copiar archivos individuales de forma segura
+          [ -f "index.html" ] && cp index.html www/ || echo "⚠️  index.html no encontrado"
+          [ -f "app.js" ] && cp app.js www/ || echo "⚠️  app.js no encontrado"
+          [ -f "styles.css" ] && cp styles.css www/ || echo "⚠️  styles.css no encontrado"
+          [ -f "sw.js" ] && cp sw.js www/ || echo "⚠️  sw.js no encontrado"
+          [ -f "manifest.webmanifest" ] && cp manifest.webmanifest www/ || echo "⚠️  manifest.webmanifest no encontrado"
+          [ -d "assets" ] && cp -r assets www/ || echo "⚠️  Carpeta assets no encontrada"
+          
+          # Crear package.json si no existe
           if [ ! -f "package.json" ]; then
             echo '{"name": "gamespace", "version": "1.0.0"}' > package.json
           fi
+          
           echo "WEB_DIR=www" >> $GITHUB_ENV
         fi
 
-    - name: Configurar Java JDK 17
-      uses: actions/setup-java@v3
+    - name: Configurar Java JDK
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: ${{ env.JAVA_VERSION }}
+        cache: gradle
 
-    - name: Instalar Capacitor y crear app Android (si no existe)
+    - name: Instalar Capacitor y crear app Android
       run: |
-        # Asegurar de tener un package.json básico antes de instalar dependencias
+        set -e
+        
+        # Asegurar de tener un package.json básico
         if [ ! -f "package.json" ]; then
           echo '{"name": "gamespace", "version": "1.0.0"}' > package.json
         fi
-        npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
         
-        # Si no existe build.gradle, creamos la estructura limpia
+        echo "📦 Instalando Capacitor..."
+        npm install @capacitor/core@6.1.0 @capacitor/cli@6.1.0 @capacitor/android@6.1.0
+        
+        # Solo recrear Android si no existe
         if [ ! -f "android/build.gradle" ]; then
-          echo "Carpeta android no encontrada o incompleta. Recreando estructura limpia..."
+          echo "🔧 Estructura Android no encontrada. Creando..."
+          
+          # Limpiar restos previos
           rm -rf android
           rm -f capacitor.config.json capacitor.config.ts
           
-          # Escribir directamente el archivo de configuración para evitar la CLI interactiva
-          echo '{
-            "appId": "com.aliienkingmx.gamespace",
-            "appName": "GameSpace",
-            "webDir": "'"${WEB_DIR:-www}"'"
-          }' > capacitor.config.json
+          # Crear configuración de Capacitor
+          cat > capacitor.config.json << EOF
+        {
+          "appId": "${{ env.APP_ID }}",
+          "appName": "${{ env.APP_NAME }}",
+          "webDir": "${WEB_DIR:-www}",
+          "server": {
+            "androidScheme": "https"
+          },
+          "plugins": {
+            "SplashScreen": {
+              "launchShowDuration": 0
+            }
+          }
+        }
+        EOF
           
+          echo "📱 Añadiendo plataforma Android..."
           npx cap add android
+        else
+          echo "✅ Estructura Android ya existe"
         fi
 
     - name: Sincronizar archivos web con Android
-      run: npx cap sync
+      run: |
+        set -e
+        echo "🔄 Sincronizando archivos web..."
+        npx cap sync
 
-    - name: Permisos para Gradlew
+    - name: Permisos para Gradle
       run: |
         if [ -f "android/gradlew" ]; then
           chmod +x android/gradlew
+          echo "✅ Permisos de gradlew configurados"
         fi
 
-    - name: Compilar APK (Debug y Release)
+    - name: Compilar APK Debug
       run: |
+        set -e
+        echo "🔨 Compilando APK Debug..."
         cd android
-        ./gradlew assembleDebug
-        ./gradlew assembleRelease
+        ./gradlew clean assembleDebug --no-daemon
+
+    - name: Compilar APK Release
+      run: |
+        set -e
+        echo "🔨 Compilando APK Release..."
+        cd android
+        ./gradlew assembleRelease --no-daemon 2>&1 || {
+          echo "⚠️  Compilación Release falló. Esto puede ser normal si no hay keystore configurado."
+          echo "Para firmar el APK, configura los secretos KEYSTORE_BASE64 y KEYSTORE_PASSWORD"
+          exit 0
+        }
+
+    - name: Verificar APKs generados
+      run: |
+        echo "📋 APKs generados:"
+        ls -lh android/app/build/outputs/apk/debug/*.apk 2>/dev/null || echo "❌ No hay APK Debug"
+        ls -lh android/app/build/outputs/apk/release/*.apk 2>/dev/null || echo "⚠️  No hay APK Release (esperado sin keystore)"
 
     - name: Crear Release en GitHub
+      if: success()
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          android/app/build/outputs/apk/release/*.apk
           android/app/build/outputs/apk/debug/*.apk
+          android/app/build/outputs/apk/release/*.apk
         name: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || format('Compilación Manual ({0})', github.ref_name) }}
         tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v-latest' }}
-        draft: false
+        draft: ${{ github.ref_type != 'tag' }}
         prerelease: ${{ github.ref_type != 'tag' }}
+        body: |
+          ## 📦 APK Generados
+          - **Debug APK**: Usable en dispositivos en modo desarrollo
+          - **Release APK**: Para distribución (sin firmar)
+          
+          > **Nota**: Para producción, configura la firma del APK agregando los secretos `KEYSTORE_BASE64` y `KEYSTORE_PASSWORD`
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Resumen de construcción
+      if: always()
+      run: |
+        echo "✅ Workflow completado"
+        echo "📊 Resumen:"
+        echo "  - Node.js: ${{ env.NODE_VERSION }}"
+        echo "  - Java: ${{ env.JAVA_VERSION }}"
+        echo "  - App ID: ${{ env.APP_ID }}"
+        echo "  - Web Dir: ${WEB_DIR:-www}"

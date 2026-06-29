@@ -1,14 +1,18 @@
-name: Compilar y Publicar APK
+name: Compilar APK y Crear Release
 
 on:
   push:
     tags:
-      - 'v*' # Se activa automáticamente al crear un tag como v1.0.0
-  workflow_dispatch: # Permite compilar manualmente desde tu celular con un botón
+      - 'v*' # Se activa automáticamente al crear etiquetas como v1.0.0
+    branches:
+      - main
+  workflow_dispatch: # Permite compilar manualmente desde tu celular con un solo botón
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Clonar código
@@ -29,13 +33,15 @@ jobs:
           fi
         fi
 
-        # Auto-detectar carpeta web o crearla para proyecto estático puro
+        # Auto-detectar carpeta web
         if [ -d "dist" ]; then
           echo "WEB_DIR=dist" >> $GITHUB_ENV
         elif [ -d "build" ]; then
           echo "WEB_DIR=build" >> $GITHUB_ENV
+        elif [ -d "www" ]; then
+          echo "WEB_DIR=www" >> $GITHUB_ENV
         else
-          echo "Proyecto estático puro (HTML/JS) detectado. Creando carpeta 'www'..."
+          echo "Proyecto estático detectado. Creando carpeta 'www'..."
           mkdir -p www
           cp -r index.html app.js styles.css sw.js manifest.webmanifest assets www/ 2>/dev/null || true
           if [ ! -f "package.json" ]; then
@@ -52,9 +58,25 @@ jobs:
 
     - name: Instalar Capacitor y crear app Android (si no existe)
       run: |
-        npm install @capacitor/core @capacitor/cli @capacitor/android
-        if [ ! -d "android" ]; then
-          npx cap init "GameSpace" "com.aliienkingmx.gamespace" --web-dir=$WEB_DIR
+        # Asegurar de tener un package.json básico antes de instalar dependencias
+        if [ ! -f "package.json" ]; then
+          echo '{"name": "gamespace", "version": "1.0.0"}' > package.json
+        fi
+        npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+        
+        # Si no existe build.gradle, creamos la estructura limpia
+        if [ ! -f "android/build.gradle" ]; then
+          echo "Carpeta android no encontrada o incompleta. Recreando estructura limpia..."
+          rm -rf android
+          rm -f capacitor.config.json capacitor.config.ts
+          
+          # Escribir directamente el archivo de configuración para evitar la CLI interactiva
+          echo '{
+            "appId": "com.aliienkingmx.gamespace",
+            "appName": "GameSpace",
+            "webDir": "'"${WEB_DIR:-www}"'"
+          }' > capacitor.config.json
+          
           npx cap add android
         fi
 
@@ -62,7 +84,10 @@ jobs:
       run: npx cap sync
 
     - name: Permisos para Gradlew
-      run: chmod +x android/gradlew
+      run: |
+        if [ -f "android/gradlew" ]; then
+          chmod +x android/gradlew
+        fi
 
     - name: Compilar APK (Debug y Release)
       run: |
@@ -76,9 +101,9 @@ jobs:
         files: |
           android/app/build/outputs/apk/release/*.apk
           android/app/build/outputs/apk/debug/*.apk
-        name: Release ${{ github.ref_name }}
-        tag_name: ${{ github.ref }}
+        name: ${{ github.ref_type == 'tag' && format('Release {0}', github.ref_name) || format('Compilación Manual ({0})', github.ref_name) }}
+        tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v-latest' }}
         draft: false
-        prerelease: false
+        prerelease: ${{ github.ref_type != 'tag' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

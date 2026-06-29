@@ -1,16 +1,14 @@
-name: Compilar APK y Crear Release
+name: Compilar y Publicar APK
 
 on:
   push:
     tags:
-      - 'v*' # Se activa automáticamente cuando creas tags de versión como v1.0.0
-  workflow_dispatch: # Te permite iniciar la compilación manualmente desde tu celular
+      - 'v*' # Se activa automáticamente al crear un tag como v1.0.0
+  workflow_dispatch: # Permite compilar manualmente desde tu celular con un botón
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
     - name: Clonar código
@@ -20,13 +18,31 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 18
-        cache: 'npm'
 
-    - name: Instalar dependencias web
-      run: npm ci
+    - name: Preparar carpeta web para Capacitor
+      run: |
+        # Si existe package.json, instalar dependencias y compilar
+        if [ -f "package.json" ]; then
+          npm install
+          if npm run | grep -q "build"; then
+            npm run build
+          fi
+        fi
 
-    - name: Compilar sitio web de React
-      run: npm run build
+        # Auto-detectar carpeta web o crearla para proyecto estático puro
+        if [ -d "dist" ]; then
+          echo "WEB_DIR=dist" >> $GITHUB_ENV
+        elif [ -d "build" ]; then
+          echo "WEB_DIR=build" >> $GITHUB_ENV
+        else
+          echo "Proyecto estático puro (HTML/JS) detectado. Creando carpeta 'www'..."
+          mkdir -p www
+          cp -r index.html app.js styles.css sw.js manifest.webmanifest assets www/ 2>/dev/null || true
+          if [ ! -f "package.json" ]; then
+            echo '{"name": "gamespace", "version": "1.0.0"}' > package.json
+          fi
+          echo "WEB_DIR=www" >> $GITHUB_ENV
+        fi
 
     - name: Configurar Java JDK 17
       uses: actions/setup-java@v3
@@ -34,27 +50,32 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Instalar Capacitor y crear app Android
+    - name: Instalar Capacitor y crear app Android (si no existe)
       run: |
         npm install @capacitor/core @capacitor/cli @capacitor/android
-        npx cap init "GameSpace" "com.aliienkingmx.gamespace" --web-dir=dist
-        npx cap add android
+        if [ ! -d "android" ]; then
+          npx cap init "GameSpace" "com.aliienkingmx.gamespace" --web-dir=$WEB_DIR
+          npx cap add android
+        fi
 
-    - name: Sincronizar código React con Android
+    - name: Sincronizar archivos web con Android
       run: npx cap sync
 
     - name: Permisos para Gradlew
       run: chmod +x android/gradlew
 
-    - name: Compilar APK en modo Release
+    - name: Compilar APK (Debug y Release)
       run: |
         cd android
+        ./gradlew assembleDebug
         ./gradlew assembleRelease
 
     - name: Crear Release en GitHub
       uses: softprops/action-gh-release@v1
       with:
-        files: android/app/build/outputs/apk/release/app-release-unsigned.apk
+        files: |
+          android/app/build/outputs/apk/release/*.apk
+          android/app/build/outputs/apk/debug/*.apk
         name: Release ${{ github.ref_name }}
         tag_name: ${{ github.ref }}
         draft: false

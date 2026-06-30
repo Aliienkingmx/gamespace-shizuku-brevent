@@ -1,0 +1,17 @@
+{
+  "name": "gamespace-shizuku-brevent",
+  "version": "1.0.0",
+  "description": "Centro de control gaming para Android con Shizuku, Termux y Brevent",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Web app ready for Capacitor'"
+  },
+  "keywords": ["gaming", "android", "shizuku", "termux", "brevent"],
+  "author": "Aliienkingmx",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/core": "^6.1.0"
+  }
+}

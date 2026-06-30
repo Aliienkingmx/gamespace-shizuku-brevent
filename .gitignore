@@ -1,0 +1,14 @@
+node_modules/
+www/
+android/app/build/
+.gradle/
+.idea/
+*.log
+*.swp
+.DS_Store
+dist/
+build/
+coverage/
+.env
+.env.local
+capacitor.config.ts

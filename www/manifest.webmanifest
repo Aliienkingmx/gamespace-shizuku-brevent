@@ -1,0 +1,14 @@
+{
+  "name": "Game Space · Shizuku Booster",
+  "short_name": "GameSpace",
+  "description": "Centro de control gaming para Android con Shizuku, Termux y Brevent. Optimiza el rendimiento de tus juegos sin root.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "lang": "es",
+  "categories": ["games", "utilities", "productivity"],
+  "prefer_related_applications": false
+}

@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
-        with:
+        with: [![.github/workflows/build-apk.yml](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg?event=check_run)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
           name: GameSpace-APK-Debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error

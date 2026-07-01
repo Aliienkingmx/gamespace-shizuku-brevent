@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "build": "echo '✓ Todos los archivos web listos para Capacitor' && ls -la index.html styles.css app.js manifest.webmanifest",
-    "cap:init": "npx cap init com.aliienkingmx.gamespace 'Game Space' --yes",
+    "cap:init": "npx cap init com.aliienkingmx.gamespace 'Game Space'",
     "cap:add": "npm run cap:init && npx cap add android",
     "cap:sync": "npx cap sync android",
     "cap:build": "npm run build && npm run cap:sync && cd android && ./gradlew assembleDebug",

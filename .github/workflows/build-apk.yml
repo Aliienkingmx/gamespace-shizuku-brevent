@@ -34,7 +34,7 @@ jobs:
         run: npm install
 
       - name: Initialize Capacitor Android platform
-        run: |
+        run: |[![Build Android APK](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
           if [ ! -f android/.gitignore ]; then
             npx cap init "Game Space" com.aliienkingmx.gamespace
             npx cap add android

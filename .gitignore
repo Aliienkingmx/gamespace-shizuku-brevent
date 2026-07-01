@@ -1,14 +1,27 @@
+# Node
 node_modules/
-www/
-android/app/build/
+npm-debug.log
+package-lock.json
+
+# Capacitor / Android
+android/
 .gradle/
-.idea/
-*.log
-*.swp
+*.apk
+*.aab
+*.keystore
+local.properties
+
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Build
 dist/
 build/
-coverage/
-.env
-.env.local
-capacitor.config.ts
+*.class
+*.dex

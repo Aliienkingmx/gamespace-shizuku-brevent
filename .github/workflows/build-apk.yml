@@ -1,0 +1,94 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Initialize Capacitor Android platform
+        run: |
+          if [ ! -f android/.gitignore ]; then
+            npx cap init com.aliienkingmx.gamespace "Game Space" --webDir=. --yes
+            npx cap add android
+          else
+            echo "✓ Android platform already initialized, running sync..."
+          fi
+
+      - name: Sync Capacitor with Android
+        run: npx cap sync android
+
+      - name: Build APK (Debug)
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameSpace-APK-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Build APK (Release - unsigned)
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Upload Release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameSpace-APK-Release-Unsigned
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: warn
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Game Space ${{ github.ref_name }}
+          body: |
+            ## Game Space ${{ github.ref_name }}
+            
+            Descarga el APK desde los artifacts arriba.
+            Necesitarás firmarlo con tu propio keystore antes de instalar.
+            
+            ### Requisitos
+            - Android 8.0+
+            - Shizuku v13.5+
+            - Termux (F-Droid)
+            
+            ### Instrucciones
+            1. Instala Shizuku y actívalo
+            2. Instala la app
+            3. Activa los bridges en Ajustes
+          files: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: true

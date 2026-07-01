@@ -1,17 +1,38 @@
 {
   "name": "gamespace-shizuku-brevent",
   "version": "1.0.0",
-  "description": "Centro de control gaming para Android con Shizuku, Termux y Brevent",
+  "description": "Game Space — Centro de control gaming para Android con Shizuku, Termux y Brevent",
   "main": "index.html",
   "scripts": {
-    "build": "echo 'Web app ready for Capacitor'"
+    "build": "echo '✓ Todos los archivos web listos para Capacitor' && ls -la index.html styles.css app.js manifest.webmanifest",
+    "cap:init": "npx cap init com.aliienkingmx.gamespace 'Game Space' --webDir=. --yes",
+    "cap:add": "npm run cap:init && npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "cap:build": "npm run build && npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "cap:release": "npm run build && npm run cap:sync && cd android && ./gradlew assembleRelease"
   },
-  "keywords": ["gaming", "android", "shizuku", "termux", "brevent"],
+  "keywords": [
+    "gaming",
+    "android",
+    "shizuku",
+    "termux",
+    "brevent",
+    "booster",
+    "game-optimizer"
+  ],
   "author": "Aliienkingmx",
   "license": "MIT",
   "dependencies": {
     "@capacitor/android": "^6.1.0",
     "@capacitor/cli": "^6.1.0",
     "@capacitor/core": "^6.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aliienkingmx/gamespace-shizuku-brevent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Aliienkingmx/gamespace-shizuku-brevent/issues"
+  },
+  "homepage": "https://github.com/Aliienkingmx/gamespace-shizuku-brevent#readme"
 }

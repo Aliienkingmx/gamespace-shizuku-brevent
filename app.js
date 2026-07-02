@@ -780,8 +780,7 @@ function refreshProUI() {
 
 ['autoBoost','autoScan','keepFps','freezeSocial','boostNotif','saveHist','debugMode'].forEach(id => {
   document.getElementById(id).addEventListener('change', e => {
-    // Bloquear features Pro si no tiene licencia
-    if (!isPro() && ['autoBoost','keepFps','freezeSocial'].includes(id)) {
+    // Bloquear features Pro si no tiene licencia      if (!isPro() && ['autoBoost','keepFps','freezeSocial','saveHist'].includes(id)) {
       e.target.checked = false;
       requirePro(id);
       return;

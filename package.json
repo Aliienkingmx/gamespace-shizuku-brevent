@@ -4,8 +4,9 @@
   "description": "Game Space — Centro de control gaming para Android con Shizuku, Termux y Brevent",
   "main": "index.html",
   "scripts": {
-    "build": "echo '✓ Todos los archivos web listos para Capacitor' && ls -la index.html styles.css app.js manifest.webmanifest",
-    "cap:init": "npx cap init com.aliienkingmx.gamespace 'Game Space'",
+    "prebuild": "mkdir -p www && cp index.html app.js styles.css manifest.webmanifest sw.js www/",
+    "build": "npm run prebuild && echo '✓ www/ sincronizado para Capacitor' && ls -la www/",
+    "cap:init": "npx cap init 'Game Space' com.aliienkingmx.gamespace",
     "cap:add": "npm run cap:init && npx cap add android",
     "cap:sync": "npx cap sync android",
     "cap:build": "npm run build && npm run cap:sync && cd android && ./gradlew assembleDebug",

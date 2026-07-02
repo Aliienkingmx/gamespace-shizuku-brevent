@@ -12,6 +12,44 @@
    =============================================================== */
 
 const STORAGE_KEY = 'gamespace_state_v1';
+const PRO_STORAGE_KEY = 'gamespace_pro';
+
+/* ── Features Pro ───────────────────────────── */
+const PRO_FEATURES = {
+  autoBoost:     { name:'Auto-boost',  desc:'Ejecutar boost al abrir juegos' },
+  keepFps:       { name:'Refresco max', desc:'Mantener 90/120 Hz siempre' },
+  freezeSocial:  { name:'Freeze social', desc:'Congelar apps sociales automáticamente' },
+  customPresets: { name:'Presets ilimitados', desc:'Guardar comandos personalizados sin límite' },
+  allProfiles:   { name:'Perfiles completos', desc:'Todos los perfiles de optimización' },
+  history:       { name:'Historial', desc:'Conservar historial de boosts' },
+  noAds:         { name:'Sin anuncios', desc:'App completamente libre de anuncios' },
+};
+
+function isPro() {
+  try {
+    const data = JSON.parse(localStorage.getItem(PRO_STORAGE_KEY) || '{}');
+    return data.active === true && data.license && data.license.length > 10;
+  } catch { return false; }
+}
+
+function activatePro(licenseKey) {
+  if (!licenseKey || licenseKey.length < 10) return false;
+  localStorage.setItem(PRO_STORAGE_KEY, JSON.stringify({ active: true, license: licenseKey, activatedAt: Date.now() }));
+  return true;
+}
+
+function deactivatePro() {
+  localStorage.removeItem(PRO_STORAGE_KEY);
+}
+
+function requirePro(feature) {
+  if (isPro()) return true;
+  const f = PRO_FEATURES[feature];
+  toast('🔒', f ? `'${f.name}' es Pro · Haz upgrade` : 'Función Pro · Haz upgrade', 'warn');
+  return false;
+}
+
+/* ── Estado default ─────────────────────────── */
 
 const defaultState = {
   connected: { shizuku: false, termux: false, brevent: false },
@@ -687,13 +725,7 @@ document.getElementById('copyOut').addEventListener('click', () => {
   navigator.clipboard.writeText(document.getElementById('customOut').textContent);
   toast('📋', 'Salida copiada', 'info');
 });
-document.getElementById('saveCustom').addEventListener('click', () => {
-  const c = document.getElementById('customCmd').value.trim();
-  if (!c) return;
-  state.presets.push({ t: Date.now(), cmd: c });
-  saveState();
-  toast('★', 'Preset guardado', 'success');
-});
+// Nota: saveCustom se maneja en la sección 13 (Settings/Pro)
 
 function openApp(pkg, name) {
   if (env.isAndroid) {
@@ -722,8 +754,38 @@ function loadSettings() {
   document.getElementById('debugMode').checked = state.settings.debugMode;
 }
 
+function refreshProUI() {
+  const pro = isPro();
+  document.querySelectorAll('.pro-only').forEach(el => {
+    if (pro) {
+      el.classList.remove('locked');
+      el.querySelectorAll('.pro-badge').forEach(b => b.remove());
+    } else {
+      el.classList.add('locked');
+      if (!el.querySelector('.pro-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'pro-badge';
+        badge.textContent = '🔒 Pro';
+        el.appendChild(badge);
+      }
+    }
+  });
+  document.getElementById('proStatus').innerHTML = pro
+    ? '<span style="color:#69f0ae">●</span> Pro activo'
+    : '<span style="color:#5a6378">●</span> Versión gratuita';
+  document.getElementById('proUpgradeSection').style.display = pro ? 'none' : 'block';
+  document.getElementById('proActiveSection').style.display = pro ? 'block' : 'none';
+  refreshAdBanner();
+}
+
 ['autoBoost','autoScan','keepFps','freezeSocial','boostNotif','saveHist','debugMode'].forEach(id => {
   document.getElementById(id).addEventListener('change', e => {
+    // Bloquear features Pro si no tiene licencia
+    if (!isPro() && ['autoBoost','keepFps','freezeSocial'].includes(id)) {
+      e.target.checked = false;
+      requirePro(id);
+      return;
+    }
     state.settings[id] = e.target.checked;
     saveState();
     if (id === 'debugMode') console.log('[GS] Debug', e.target.checked ? 'ON' : 'OFF');
@@ -735,8 +797,122 @@ document.getElementById('resetAll').addEventListener('click', () => {
   localStorage.removeItem(STORAGE_KEY);
   state = loadState();
   loadSettings();
+  refreshProUI();
   renderProfiles();
   toast('↻', 'Configuración restablecida', 'success');
+});
+
+/* ── Pro: Activar licencia ────────────────── */
+document.getElementById('activateProBtn').addEventListener('click', () => {
+  const key = document.getElementById('proLicenseInput').value.trim();
+  if (activatePro(key)) {
+    toast('👑', '¡Game Space Pro activado!', 'success');
+    refreshProUI();
+    loadSettings();
+  } else {
+    toast('✗', 'Licencia inválida', 'error');
+  }
+});
+
+document.getElementById('deactivateProBtn').addEventListener('click', () => {
+  if (!confirm('¿Desactivar Game Space Pro?')) return;
+  deactivatePro();
+  toast('👑', 'Pro desactivado', 'info');
+  refreshProUI();
+});
+
+/* ── Donaciones ────────────────────────────── */
+document.getElementById('donatePaypal').addEventListener('click', () => {
+  window.open('https://paypal.me/aliienkingmx', '_blank');
+  toast('❤️', 'Gracias por tu apoyo!', 'info');
+});
+document.getElementById('donateKoFi').addEventListener('click', () => {
+  window.open('https://ko-fi.com/aliienkingmx', '_blank');
+  toast('☕', 'Gracias por el café!', 'info');
+});
+
+/* ── AdMob (placeholder) ───────────────────── */
+let adsInitialized = false;
+let adBannerVisible = false;
+
+/**
+ * Inicializa AdMob (solo Android nativo vía Capacitor).
+ * Usa window.Capacitor.Plugins.AdMob — la API global que inyecta el plugin nativo.
+ */
+function getAdMob() {
+  try {
+    const p = window.Capacitor?.Plugins?.AdMob;
+    return p || null;
+  } catch { return null; }
+}
+
+async function initAds() {
+  if (adsInitialized || isPro()) return;
+  try {
+    const AdMob = getAdMob();
+    if (AdMob && typeof AdMob.initialize === 'function') {
+      await AdMob.initialize({ requestTrackingAuthorization: true });
+      adsInitialized = true;
+      debug('AdMob initialized');
+    }
+  } catch (e) {
+    debug('AdMob not available:', e.message);
+  }
+}
+
+async function showBannerAd() {
+  if (isPro() || !adsInitialized) return;
+  try {
+    const AdMob = getAdMob();
+    if (AdMob && typeof AdMob.showBanner === 'function') {
+      await AdMob.showBanner({
+        adId: 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY', // ← REEMPLAZA con tu ID de AdMob
+        position: 'bottom',
+        margin: 0,
+      });
+      adBannerVisible = true;
+    }
+  } catch (e) {
+    debug('AdMob show failed:', e.message);
+  }
+}
+
+async function hideBannerAd() {
+  if (!adBannerVisible) return;
+  try {
+    const AdMob = getAdMob();
+    if (AdMob && typeof AdMob.hideBanner === 'function') {
+      await AdMob.hideBanner();
+      adBannerVisible = false;
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function refreshAdBanner() {
+  const banner = document.getElementById('adBanner');
+  if (!banner) return;
+  if (isPro()) {
+    banner.style.display = 'none';
+    hideBannerAd();
+  } else {
+    banner.style.display = 'block';
+    // En plataforma nativa mostraríamos AdMob aquí
+    // Por ahora mostramos placeholder visual
+  }
+}
+
+/* ── Bloquear presets si no es Pro ────────── */
+// Handler único con check Pro (reemplaza al original de la sección 12)
+document.getElementById('saveCustom').addEventListener('click', function saveCustomHandler() {
+  if (!isPro() && state.presets.length >= 3) {
+    requirePro('customPresets');
+    return;
+  }
+  const c = document.getElementById('customCmd').value.trim();
+  if (!c) return;
+  state.presets.push({ t: Date.now(), cmd: c });
+  saveState();
+  toast('★', 'Preset guardado', 'success');
 });
 
 /* ===============================================================
@@ -749,11 +925,15 @@ async function init() {
   if (PAGE_TITLES[initial]) switchView(initial);
 
   loadSettings();
+  refreshProUI();
   renderProfiles();
   renderGames();
   refreshProcesses();
   updateMetrics();
   refreshBridges();
+
+  // Inicializar ads
+  initAds();
 
   // Métricas cada 4s
   setInterval(updateMetrics, 4000);

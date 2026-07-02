@@ -48,29 +48,55 @@ jobs:
       - name: Sync Capacitor with Android
         run: npx cap sync android
 
-      - name: Build APK (Debug)
+      - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Upload Debug APK artifact
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: GameSpace-APK-Debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
-      - name: Build APK (Release - unsigned)
+      # ────────── Release (signed with apksigner) ──────────
+      - name: Generate release keystore
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          keytool -genkey -v \
+            -keystore release.keystore \
+            -alias gamespace \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass gamespace123 \
+            -keypass gamespace123 \
+            -dname "CN=Aliienkingmx, OU=GameSpace, O=Aliienkingmx, L=Mexico, ST=Mexico, C=MX"
+
+      - name: Build unsigned release APK
         if: startsWith(github.ref, 'refs/tags/v')
         working-directory: android
         run: ./gradlew assembleRelease
 
-      - name: Upload Release APK
+      - name: Find Android SDK build-tools & sign APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          BUILD_TOOLS="$ANDROID_HOME/build-tools"
+          VERSION=$(ls "$BUILD_TOOLS" | sort -V | tail -1)
+          "$BUILD_TOOLS/$VERSION/apksigner" sign \
+            --ks release.keystore \
+            --ks-key-alias gamespace \
+            --ks-pass pass:gamespace123 \
+            --key-pass pass:gamespace123 \
+            --out GameSpace-signed.apk \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
+          echo "✓ APK firmado: GameSpace-signed.apk"
+
+      - name: Upload signed release APK
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
-          name: GameSpace-APK-Release-Unsigned
-          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
-          if-no-files-found: warn
+          name: GameSpace-APK-Signed
+          path: GameSpace-signed.apk
+          if-no-files-found: error
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -78,20 +104,29 @@ jobs:
         with:
           name: Game Space ${{ github.ref_name }}
           body: |
-            ## Game Space ${{ github.ref_name }}
+            ## 🎮 Game Space ${{ github.ref_name }}
 
-            Descarga el APK desde los artifacts arriba.
-            Necesitarás firmarlo con tu propio keystore antes de instalar.
+            ### ✅ Descargas
+            - **APK Debug** (universal): disponible en artifacts
+            - **APK Release firmado**: disponible en artifacts (instalación directa)
 
-            ### Requisitos
+            ### ✨ Novedades
+            - Sistema Pro con licencia vitalicia
+            - Donaciones vía PayPal / Ko-fi
+            - Integración AdMob (versión gratuita)
+            - APK firmado listo para instalar
+
+            ### 📋 Requisitos
             - Android 8.0+
             - Shizuku v13.5+
             - Termux (F-Droid)
 
-            ### Instrucciones
-            1. Instala Shizuku y actívalo
-            2. Instala la app
-            3. Activa los bridges en Ajustes
+            ### 🚀 Instalación
+            1. Descarga el APK firmado (GameSpace-APK-Signed)
+            2. Activa "Instalar desde fuentes desconocidas"
+            3. Instala y abre Game Space
+            4. Concede permisos de Shizuku
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/release/app-release.apk
           generate_release_notes: true

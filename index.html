@@ -394,7 +394,7 @@
             </div>
             <label class="switch"><input type="checkbox" checked disabled /><span class="slider"></span></label>
           </div>
-          <div class="setting-row">
+          <div class="setting-row pro-only">
             <div>
               <h4>Auto-boost al iniciar juego</h4>
               <p>Ejecuta el optimizador al abrir una app de juego</p>
@@ -408,14 +408,14 @@
             </div>
             <label class="switch"><input type="checkbox" id="autoScan" checked /><span class="slider"></span></label>
           </div>
-          <div class="setting-row">
+          <div class="setting-row pro-only">
             <div>
               <h4>Mantener refresco máximo</h4>
               <p>Aplica 90/120 Hz permanentemente al iniciar</p>
             </div>
             <label class="switch"><input type="checkbox" id="keepFps" /><span class="slider"></span></label>
           </div>
-          <div class="setting-row">
+          <div class="setting-row pro-only">
             <div>
               <h4>Congelar apps sociales</h4>
               <p>Pausa Instagram, TikTok, etc. en segundo plano</p>
@@ -429,7 +429,7 @@
             </div>
             <label class="switch"><input type="checkbox" id="boostNotif" checked /><span class="slider"></span></label>
           </div>
-          <div class="setting-row">
+          <div class="setting-row pro-only">
             <div>
               <h4>Recordar terminal</h4>
               <p>Conserva el historial al cerrar la app</p>
@@ -449,6 +449,82 @@
               <p>Devuelve la app a sus valores por defecto</p>
             </div>
             <button class="danger-btn" id="resetAll">Reset</button>
+          </div>
+        </div>
+
+        <!-- ============ PRO ============ -->
+        <div class="pro-section">
+          <div class="pro-header">
+            <span class="pro-crown">👑</span>
+            <div>
+              <h3>Game Space Pro</h3>
+              <p id="proStatus"><span style="color:#5a6378">●</span> Versión gratuita</p>
+            </div>
+          </div>
+
+          <div class="pro-features-list">
+            <div class="pro-feature"><span>🚀</span> Auto-boost al abrir juegos</div>
+            <div class="pro-feature"><span>◈</span> Refresco máximo permanente (90/120 Hz)</div>
+            <div class="pro-feature"><span>❄</span> Congelar apps sociales automáticamente</div>
+            <div class="pro-feature"><span>★</span> Presets de comandos ilimitados</div>
+            <div class="pro-feature"><span>📋</span> Historial completo de boosts</div>
+            <div class="pro-feature"><span>🚫</span> Sin anuncios</div>
+          </div>
+
+          <div id="proUpgradeSection">
+            <div class="pro-price">
+              <span class="price-amount">$3.99</span>
+              <span class="price-period">único pago · licencia vitalicia</span>
+            </div>
+            <div class="pro-actions">
+              <a class="primary-btn" href="https://paypal.me/aliienkingmx/3.99" target="_blank" style="text-align:center;text-decoration:none;flex:1">
+                💳 Comprar Pro · $3.99
+              </a>
+            </div>
+            <div class="pro-license">
+              <p style="font-size:12px;color:var(--text-dim);margin:0 0 8px">
+                ¿Ya tienes licencia? Ingresa tu código:
+              </p>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="proLicenseInput" placeholder="Código de licencia…" style="flex:1;padding:10px 12px;background:var(--bg-3);border:1px solid var(--card-border);border-radius:var(--radius-sm);outline:none;color:var(--text);font-size:13px" />
+                <button class="primary-btn" id="activateProBtn" style="white-space:nowrap">Activar</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="proActiveSection" style="display:none">
+            <div style="text-align:center;padding:16px;background:rgba(105,240,174,0.1);border-radius:var(--radius);border:1px solid rgba(105,240,174,0.2)">
+              <p style="font-size:16px;font-weight:700;margin:0;color:var(--success)">✅ Pro activo — ¡gracias por tu apoyo!</p>
+              <button class="danger-btn" id="deactivateProBtn" style="margin-top:10px;font-size:12px">Desactivar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ DONACIONES ============ -->
+        <div class="donate-section">
+          <div class="donate-header">
+            <span style="font-size:24px">❤️</span>
+            <div>
+              <h3>¿Te gusta Game Space?</h3>
+              <p>Tu apoyo ayuda a mantener el proyecto vivo y seguir mejorando</p>
+            </div>
+          </div>
+          <div class="donate-actions">
+            <button class="primary-btn" id="donatePaypal" style="flex:1">
+              <span>💸</span> PayPal
+            </button>
+            <button class="primary-btn" id="donateKoFi" style="flex:1;background:linear-gradient(135deg,#ff5e5b,#ff9472)">
+              <span>☕</span> Ko-fi
+            </button>
+          </div>
+        </div>
+
+        <!-- ============ AD BANNER ============ -->
+        <div id="adBanner" class="ad-banner" style="display:none">
+          <div class="ad-placeholder">
+            <span>📢</span>
+            <span class="ad-text">Anuncio</span>
+            <span class="ad-sub">Actualiza a Pro sin anuncios</span>
           </div>
         </div>
       </section>

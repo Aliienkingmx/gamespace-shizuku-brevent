@@ -34,8 +34,8 @@ jobs:
         run: npm install
 
       - name: Initialize Capacitor Android platform
-        run: |[![Build Android APK](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
-          if [ ! -f android/.gitignore ]; then
+        run: Build Android APK (https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
+          if
             npx cap init "Game Space" com.aliienkingmx.gamespace
             npx cap add android
           else
@@ -51,11 +51,11 @@ jobs:
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
-        with: [![.github/workflows/build-apk.yml](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg?event=check_run)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
+        with: (http://github/workflows/build-apk.yml) (https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg?event=check_run) (https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
           name: GameSpace-APK-Debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-
+          
       - name: Build APK (Release - unsigned)
         if: startsWith(github.ref, 'refs/tags/v')
         working-directory: android

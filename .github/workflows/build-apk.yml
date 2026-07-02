@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,10 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Generate package-lock.json (if missing)
+        run: npm install --package-lock-only || true
+
       - name: Initialize Capacitor Android platform
-        run: |[![Build Android APK](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
+        run: |
           if [ ! -f android/.gitignore ]; then
-            npx cap init "Game Space" com.aliienkingmx.gamespace
+            npx cap init com.aliienkingmx.gamespace "Game Space" --webDir=www --yes
             npx cap add android
           else
             echo "✓ Android platform already initialized, running sync..."
@@ -49,9 +52,9 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Upload APK artifact
+      - name: Upload Debug APK artifact
         uses: actions/upload-artifact@v4
-        with: [![.github/workflows/build-apk.yml](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg?event=check_run)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
+        with:
           name: GameSpace-APK-Debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
@@ -76,15 +79,15 @@ jobs:
           name: Game Space ${{ github.ref_name }}
           body: |
             ## Game Space ${{ github.ref_name }}
-            
+
             Descarga el APK desde los artifacts arriba.
             Necesitarás firmarlo con tu propio keystore antes de instalar.
-            
+
             ### Requisitos
             - Android 8.0+
             - Shizuku v13.5+
             - Termux (F-Droid)
-            
+
             ### Instrucciones
             1. Instala Shizuku y actívalo
             2. Instala la app

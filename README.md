@@ -1,5 +1,7 @@
 <div align="center">
 
+   [![Build Android APK](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Aliienkingmx/gamespace-shizuku-brevent/actions/workflows/build-apk.yml)
+   
 <img src="https://img.shields.io/badge/Game%20Space-v1.0-00e5ff?style=for-the-badge&logo=android&logoColor=white" alt="Game Space v1.0"/>
 <img src="https://img.shields.io/badge/license-MIT-69f0ae?style=for-the-badge" alt="License MIT"/>
 <img src="https://img.shields.io/badge/HTML5-orange?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5"/>

@@ -39,7 +39,7 @@ jobs:
       - name: Initialize Capacitor Android platform
         run: |
           if [ ! -f android/.gitignore ]; then
-            npx cap init "Game Space" com.aliienkingmx.gamespace --yes
+            npx cap init "Game Space" com.aliienkingmx.gamespace
             npx cap add android
           else
             echo "✓ Android platform already initialized, running sync..."
